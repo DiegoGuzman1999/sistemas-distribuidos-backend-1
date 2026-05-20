@@ -1,30 +1,35 @@
 import pytest
-from sqlalchemy.pool import StaticPool
-from app import create_app, db
-from app.models import Usuario
+from app import create_app, db as _db
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def app():
-    application = create_app({
+    test_config = {
         'TESTING': True,
-        'SECRET_KEY': 'test-secret',
         'SQLALCHEMY_DATABASE_URI': 'sqlite:///:memory:',
-        'SQLALCHEMY_ENGINE_OPTIONS': {
-            'connect_args': {'check_same_thread': False},
-            'poolclass': StaticPool,
-        },
-    })
+        'SQLALCHEMY_TRACK_MODIFICATIONS': False,
+        'SECRET_KEY': 'test-secret',
+        'SESSION_COOKIE_SAMESITE': 'Lax',
+        'SESSION_COOKIE_SECURE': False,
+        'WTF_CSRF_ENABLED': False,
+    }
+    application = create_app(test_config)
 
     with application.app_context():
-        db.create_all()
-        user = Usuario(username='admin', password='admin123', rol='admin')
-        db.session.add(user)
-        db.session.commit()
+        _db.create_all()
         yield application
-        db.drop_all()
+        _db.drop_all()
 
 
-@pytest.fixture
+@pytest.fixture(scope='session')
 def client(app):
     return app.test_client()
+
+
+@pytest.fixture(autouse=True)
+def limpiar_usuarios(app):
+    with app.app_context():
+        from app.models import Usuario
+        _db.session.query(Usuario).delete()
+        _db.session.commit()
+    yield
