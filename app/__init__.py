@@ -21,7 +21,7 @@ def create_app():
 
     app.secret_key = os.environ.get('SECRET_KEY', 'clave-secreta-dev')
 
-    # AGREGAR ESTO
+    app.config['SESSION_COOKIE_DOMAIN'] = 'localhost'
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
     app.config['SESSION_COOKIE_SECURE'] = False
 
