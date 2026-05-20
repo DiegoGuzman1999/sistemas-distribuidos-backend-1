@@ -5,24 +5,35 @@ import os
 
 db = SQLAlchemy()
 
-def create_app(test_config=None):
+def create_app():
     app = Flask(__name__)
-    CORS(app, supports_credentials=True, origins=["http://localhost:3000", "http://127.0.0.1:3000", "http://localhost", "http://127.0.0.1"])
+
+    CORS(
+        app,
+        supports_credentials=True,
+        origins=[
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+            "http://localhost",
+            "http://127.0.0.1"
+        ]
+    )
 
     app.secret_key = os.environ.get('SECRET_KEY', 'clave-secreta-dev')
 
-    if test_config is None:
-        db_url = (
-            f"postgresql://{os.environ.get('DB_USER', 'admin')}:"
-            f"{os.environ.get('DB_PASSWORD', 'admin123')}@"
-            f"{os.environ.get('DB_HOST', 'localhost')}:"
-            f"{os.environ.get('DB_PORT', '5432')}/"
-            f"{os.environ.get('DB_NAME', 'inventario_db')}"
-        )
-        app.config['SQLALCHEMY_DATABASE_URI'] = db_url
-    else:
-        app.config.update(test_config)
+    # AGREGAR ESTO
+    app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+    app.config['SESSION_COOKIE_SECURE'] = False
 
+    db_url = (
+        f"postgresql://{os.environ.get('DB_USER', 'admin')}:"
+        f"{os.environ.get('DB_PASSWORD', 'admin123')}@"
+        f"{os.environ.get('DB_HOST', 'localhost')}:"
+        f"{os.environ.get('DB_PORT', '5432')}/"
+        f"{os.environ.get('DB_NAME', 'inventario_db')}"
+    )
+
+    app.config['SQLALCHEMY_DATABASE_URI'] = db_url
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     db.init_app(app)
